@@ -1,23 +1,29 @@
-#!/usr/env/bin python3
-
+#!/usr/bin/env python3
 """
-Definition of the module to implement password hashing
+Defines a hash_password function to return a hashed password
 """
 import bcrypt
+from bcrypt import hashpw
 
 
 def hash_password(password: str) -> bytes:
     """
-    A function that hashes a password and returns a byte string
+    Returns a hashed password
+    Args:
+        password (str): password to be hashed
     """
     b = password.encode()
-    hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
-    return hashed_password
+    hashed = hashpw(b, bcrypt.gensalt())
+    return hashed
 
 
 def is_valid(hashed_password: bytes, password: str) -> bool:
     """
-    A function that validates a password
+    Check whether a password is valid
+    Args:
+        hashed_password (bytes): hashed password
+        password (str): password in string
+    Return:
+        bool
     """
-
     return bcrypt.checkpw(password.encode(), hashed_password)

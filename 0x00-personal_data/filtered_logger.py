@@ -1,32 +1,30 @@
 #!/usr/bin/env python3
-
 """
-Definition of filter_datum functions that returns an obfuscated log message
+Definition of filter_datum function that returns an obfuscated log message
 """
-import logging
-import re
 from typing import List
+import re
+import logging
 import os
 import mysql.connector
+
 
 PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
 
-def filter_datum(fields: List[str], redaction: str, message: str,
-                 separator: str) -> str:
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
     """
-    Returns an obfuscated log message
-
+    Return an obfuscated log message
     Args:
-    fields (list): list of strings indicating fields to obfuscate 
-    redaction (str): what the field will be obfuscated to 
-    message (str): the log line to obfuscate
-    separator (str): the character separating the fields
+        fields (list): list of strings indicating fields to obfuscate
+        redaction (str): what the field will be obfuscated to
+        message (str): the log line to obfuscate
+        separator (str): the character separating the fields
     """
-
     for field in fields:
-        message = re.sub(field+'=.*?' + separator, field +
-                         '=' + redaction + separator, message)
+        message = re.sub(field+'=.*?'+separator,
+                         field+'='+redaction+separator, message)
     return message
 
 
@@ -43,7 +41,7 @@ class RedactingFormatter(logging.Formatter):
         self.fields = fields
 
     def format(self, record: logging.LogRecord) -> str:
-        """.
+        """
         redact the message of LogRecord instance
         Args:
         record (logging.LogRecord): LogRecord instance containing message
@@ -51,8 +49,8 @@ class RedactingFormatter(logging.Formatter):
             formatted string
         """
         message = super(RedactingFormatter, self).format(record)
-        redacted = filter_datum(
-            self.fields, self.REDACTION, message, self.SEPARATOR)
+        redacted = filter_datum(self.fields, self.REDACTION,
+                                message, self.SEPARATOR)
         return redacted
 
 
@@ -75,22 +73,16 @@ def get_logger() -> logging.Logger:
 
 def get_db() -> mysql.connector.connection.MySQLConnection:
     """
-    Returns a connector to the database.
-
-    The database connection parameters are retrieved 
-    from environment variables.
-
-    Returns:
-        MySQLConnection: A connection object to the MySQL database.
     """
-    config = {
-        'user': os.getenv('PERSONAL_DATA_DB_USERNAME', 'root'),
-        'password': os.getenv('PERSONAL_DATA_DB_PASSWORD', ''),
-        'host': os.getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
-        'database': os.getenv('PERSONAL_DATA_DB_NAME', 'holberton'),
-    }
-    connection = mysql.connector.connect(**config)
-    return connection
+    user = os.getenv('PERSONAL_DATA_DB_USERNAME') or "root"
+    passwd = os.getenv('PERSONAL_DATA_DB_PASSWORD') or ""
+    host = os.getenv('PERSONAL_DATA_DB_HOST') or "localhost"
+    db_name = os.getenv('PERSONAL_DATA_DB_NAME')
+    conn = mysql.connector.connect(user=user,
+                                   password=passwd,
+                                   host=host,
+                                   database=db_name)
+    return conn
 
 
 def main():
@@ -107,3 +99,7 @@ def main():
         logger.info(message.strip())
     cursor.close()
     db.close()
+
+
+if __name__ == "__main__":
+    main()
