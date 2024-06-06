@@ -4,10 +4,10 @@ Route module for the API
 """
 from os import getenv
 from api.v1.views import app_views
-from flask import Flask, jsonify, abort, request
-from flask_cors import (CORS, cross_origin)
 from api.v1.auth.auth import Auth
 from api.v1.auth.basic_auth import BasicAuth
+from flask import Flask, jsonify, abort, request
+from flask_cors import (CORS, cross_origin)
 import os
 
 
@@ -58,17 +58,19 @@ def not_found(error) -> str:
 
 @app.errorhandler(401)
 def not_authorized(error) -> str:
-    """Not authorized handler"""
+    """ Not authorized handler
+    """
     return jsonify({"error": "Unauthorized"}), 401
 
 
 @app.errorhandler(403)
 def forbidden(error) -> str:
-    """Forbidden handler"""
+    """ forbidden action handler
+    """
     return jsonify({"error": "Forbidden"}), 403
 
 
 if __name__ == "__main__":
     host = getenv("API_HOST", "0.0.0.0")
     port = getenv("API_PORT", "5000")
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, debug=True)
