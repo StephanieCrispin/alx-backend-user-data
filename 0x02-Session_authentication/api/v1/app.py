@@ -4,11 +4,6 @@ Route module for the API
 """
 from os import getenv
 from api.v1.views import app_views
-from api.v1.auth.auth import Auth
-from api.v1.auth.basic_auth import BasicAuth
-from api.v1.auth.session_auth import SessionAuth
-from api.v1.auth.session_exp_auth import SessionExpAuth
-from api.v1.auth.session_db_auth import SessionDBAuth
 from flask import Flask, jsonify, abort, request
 from flask_cors import (CORS, cross_origin)
 import os
@@ -19,17 +14,29 @@ app.register_blueprint(app_views)
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 auth = os.getenv('AUTH_TYPE')
 
-auth_repo = {
-    'auth': Auth,
-    'basic_auth': BasicAuth,
-    "session_auth": SessionAuth,
-    "session_exp_auth": SessionExpAuth,
-    "session_db_auth": SessionDBAuth
-}
+
+def get_auth():
+    """ all auth classes getter """
+    from api.v1.auth.auth import Auth
+    from api.v1.auth.basic_auth import BasicAuth
+    from api.v1.auth.session_auth import SessionAuth
+    from api.v1.auth.session_exp_auth import SessionExpAuth
+    from api.v1.auth.session_db_auth import SessionDBAuth
+
+    auth_repo = {
+        'auth': Auth,
+        'basic_auth': BasicAuth,
+        'session_auth': SessionAuth,
+        'session_exp_auth': SessionExpAuth,
+        'session_db_auth': SessionDBAuth
+    }
+
+    return auth_repo
+
 
 if auth:
     try:
-        auth = auth_repo[auth]()
+        auth = get_auth()[auth]()
     except Exception:
         auth = None
 
@@ -44,17 +51,20 @@ def filter():
         '/api/v1/status/',
         '/api/v1/unauthorized/',
         '/api/v1/forbidden/',
-        "/api/v1/auth_session/login/"
+        '/api/v1/auth_session/login/'
     ]
     if auth.require_auth(path, excluded_paths) is False:
         return
 
-    if auth.authorization_header(request) is None and auth.session_cookie(request) is None:
+    if auth.authorization_header(request) is None \
+            and auth.session_cookie(request) is None:
         abort(401)
 
     curr_user = auth.current_user(request)
     if curr_user is None:
         abort(403)
+
+    request.current_user = curr_user
 
 
 @app.errorhandler(404)
